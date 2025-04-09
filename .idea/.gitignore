@@ -1,0 +1,45 @@
+# =======================
+# Python
+# =======================
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# =======================
+# Virtual environments
+# =======================
+venv/
+env/
+.venv/
+.env/
+
+# =======================
+# Jupyter notebooks
+# =======================
+.ipynb_checkpoints/
+
+# =======================
+# PyCharm
+# =======================
+.idea/
+*.iml
+shelf/
+workspace.xml
+httpRequests/
+dataSources/
+dataSources.local.xml
+
+# =======================
+# System files
+# =======================
+.DS_Store
+Thumbs.db
+
+# =======================
+# VSCode (optional)
+# =======================
+.vscode/
