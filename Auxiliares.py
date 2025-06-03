@@ -24,7 +24,7 @@ def takeinputs(basededonnees):
         pixmelange = pixels[:, perm]
         valmelange = valeurs[perm]
 
-        labels_mnist = {str(i):i for i in range(10)}
+        labels_mnist = {i:i for i in range(10)}
 
         return valmelange, pixmelange, qcmval, qcmpix, labels_mnist
 
@@ -52,7 +52,6 @@ def takeinputs(basededonnees):
         return fashion_val_entraine, fashion_pix_entraine, fashion_val_test, fashion_pix_test, labels_fashion
 
     elif basededonnees == "ciphar-10":
-        raise ValueError("Pasencoreprêt")
         with open('Datas/Ciphar-10/pixentraine_cifar10', 'rb') as f:
             ciphar_pixentraine = pickle.load(f)
         with open("Datas/Ciphar-10/valentraine_cifar10", "rb") as f:

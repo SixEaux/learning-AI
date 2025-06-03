@@ -22,7 +22,6 @@ from matplotlib import pyplot as plt
 from Auxiliares import takeinputs, Draw
 
 # PARA EL FUTURO:
-# - utilizar numba sacando de la class
 # - batch para convolucion
 # - Dropout layer
 # - quitar np.repeat
@@ -31,6 +30,7 @@ from Auxiliares import takeinputs, Draw
 @dataclass
 class Parametros:
     # DATASET
+    base: str
     pix : list or np.ndarray
     vales : np.ndarray
     qcmpix: list or np.ndarray
@@ -82,6 +82,8 @@ class CNN:
         self.iter = par.iterations  # nombre iteration entrainement
         self.nblay = len(par.infolay) # nombre de layers
         self.lenbatch = par.batch #longueur du batch, implémenté seulement sans convolution
+
+        self.base = base
 
         # INITIALISATION VARIABLES
         self.cvcoef = par.coefcv #learning rate
@@ -610,7 +612,7 @@ class CNN:
         return self.beta * moyenne + (1 - self.beta) * np.square(np.clip(grad, 1e-150, None))
 
     def choix(self, y):
-        return np.argmax(y,axis=0) #, keepdims=True
+        return np.argmax(y,axis=0)
 
     def vecteur(self, val):
         if self.lenbatch == 1:
@@ -766,7 +768,21 @@ class CNN:
         self.printgray(image, "")
         forw = self.forwardprop(image)
         decision = self.choix(forw[0])
-        print(f"Je crois bien que cela est un {self.labels[decision]}")
+
+        print(f"Je crois bien que cela est un {self.labels[decision[0]]}")
+
+        try:
+            verdadero = int(input("Que numero es realmente? : "))
+        except:
+            print("NO has puesto el buen type")
+            verdadero = None
+
+        if self.base == "mnist":
+            if verdadero is not None and verdadero != decision:
+                print("Vale intentare mejorar para la proxima vez")
+                dw, db, _, dc, dcb = self.backprop(self.vecteur(verdadero), forw[1], forw[2], forw[3], forw[4], 1, False)
+
+                self.actualiseweights(dw, db, 1, dc, dcb)
 
         return
 
@@ -841,18 +857,20 @@ class CNN:
         plt.title('Fonction de Erreur')
         plt.show()
 
-inputs = takeinputs("mnist") #"mnist" #"fashion"
+base = "fashion"
+inputs = takeinputs() #"mnist" #"fashion" #ciphar-10
 
 val, pix, qcmval, qcmpix, labels = inputs
 
-convlay = [(1, "input"), (5, "relu", True)]
+convlay = [(1, "input"), (10, "relu", True), (5, "relu", True)]
 
 lay = [(32, "sigmoid"), (10, "softmax")]
 
 parametros = Parametros(pix=pix, vales=val, qcmpix=qcmpix, qcmval=qcmval, labels=labels,
-                        infolay=lay, infoconvlay=convlay, iterations=1, coefcv=0.01)
+                        infolay=lay, infoconvlay=convlay, iterations=10, coefcv=0.001, base=base)
 
 g = CNN(parametros)
+
 
 # g.train()
 #
@@ -862,21 +880,30 @@ g = CNN(parametros)
 
 # MODEL ENTRAINÉ
 
-g.importmodel("BestModels/bestmodelmnist")
-
-g.tauxerreur()
-
-
+# g.importmodel("BestModels/bestmodelmnist")
+#
+# t0 = g.tauxerreur()
+#
+# for i in range(30):
+#     g.TryToDraw()
+#
+# t = g.tauxerreur()
+#
+# if t > t0:
+#     print("ME HE SUPERADO MUCHO!!!!")
+#     g.exportmodel("BestModels/bestmodelmnist")
 
 
 # MODELE A ENTRAINÉ
 
-# print("je commence a mentrainer")
-# t = time.time()
-#
-# g.train()
-#
-# print("jai fini en :", time.time()-t)
-# g.tauxerreur()
+print("je commence a mentrainer")
+t = time.time()
 
+g.train()
+
+print("jai fini en :", time.time()-t)
+g.tauxerreur()
+
+
+g.prediction(g.pix[10])
 
