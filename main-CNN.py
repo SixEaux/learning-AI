@@ -24,7 +24,6 @@ from Auxiliares import takeinputs, Draw
 # PARA EL FUTURO:
 # - batch para convolucion
 # - Dropout layer
-# - quitar np.repeat
 # - faire avec des images en couleur (ciphar)
 
 @dataclass
@@ -133,13 +132,15 @@ class CNN:
             par.infolay = [(par.pix.shape[0], "input")] + par.infolay
 
         # INPUTS POUR ENTRAINEMENT
-        self.pix = self.processdata(par.pix, par.pix.shape[0]==3072, False, self.nbconv>0) #pix de train
+        # self.pix = self.processdata(par.pix, par.pix.shape[0]==3072, False, self.nbconv>0) #pix de train
+        self.pix = self.processdata(par.pix, False, self.nbconv > 0)
         self.vales = par.vales #val de train
         self.labels = par.labels
 
 
         # BASE DE DONNÉES POUR LES TESTS
-        self.qcmpix = self.processdata(par.qcmpix, par.pix.shape[0]==3072, True, self.nbconv>0)
+        # self.qcmpix = self.processdata(par.qcmpix, par.pix.shape[0]==3072, True, self.nbconv>0)
+        self.qcmpix = self.processdata(par.qcmpix,True, self.nbconv > 0)
         self.qcmval = par.qcmval
 
         self.dimweights = []  # dimensiones pesos para backprop
@@ -189,14 +190,16 @@ class CNN:
         plt.show()
 
     def printimage(self, base, titre=""):
-        img = base.reshape(3,32,32).transpose(1,2,0)
-        img_pil = Image.fromarray(img.astype('uint8'))
-        img_pil.show()
+        img = base.transpose(1,2,0)
+        plt.imshow(img)
+        plt.axis("off")
+        plt.title(titre)
+        plt.show()
 
     def converttogreyscale(self,rgbimage):
-        return np.dot(rgbimage,[0.299, 0.587, 0.114])
+        return np.tensordot(rgbimage,np.array([0.299, 0.587, 0.114]), (1, 2))
 
-    def processdata(self, pix, color, qcm, conv): #mettre les donnees sous la bonne forme
+    def processdatabis(self, pix, color, qcm, conv): #mettre les donnees sous la bonne forme
         if conv:
                 if qcm:
                     if color:
@@ -219,6 +222,56 @@ class CNN:
                 datamod = pix/255
 
         return datamod
+
+    def processdata(self, pix, qcm, conv):
+
+        if conv:
+            if self.base == "mnist":
+                if qcm:
+                    datamod = [pix[:, a].reshape(1, 28, 28) for a in range(pix.shape[1])]
+                else:
+                    datamod = [pix[:, a].reshape(1, 28, 28) / 255 for a in range(pix.shape[1])]
+
+            elif self.base == "fashion":
+                if qcm:
+                    datamod = [pix[:, a].reshape(1, 28, 28) for a in range(pix.shape[1])]
+                else:
+                    datamod = [pix[:, a].reshape(1, 28, 28) / 255 for a in range(pix.shape[1])]
+
+            elif self.base == "ciphar-10":
+                datamod = pix
+
+            else:
+                print("Je n'ai pas encore fait cela") #IL FAUT ICI AJOUTER POUR DETECTER TYPE INPUT
+                raise TypeError
+
+        else:
+            if self.base == "mnist":
+                if qcm:
+                    datamod = pix
+                else:
+                    datamod = pix / 255
+
+            elif self.base == "fashion":
+                if qcm:
+                    datamod = pix
+                else:
+                    datamod = pix / 255
+
+            elif self.base == "ciphar-10":
+                datamod = [self.converttogreyscale(i).reshape(-1, 1) for i in pix] #NO ESTA BIEN AUN ESTE CREO
+                final = np.array(datamod[0])
+                for i in range(1, len(datamod)):
+                    final = np.concatenate((final, datamod[i]), axes=1)
+
+                datamod = final
+
+            else:
+                print("Je n'ai pas encore fait cela")  # IL FAUT ICI AJOUTER POUR DETECTER TYPE INPUT
+                raise TypeError
+
+        return datamod
+
 
     def params(self, infolay, infoconvlay): #infolay liste avec un tuple avec (nbneurons, fctactivation) / infoconvlay (nbfiltres, fct)
         param = {}
@@ -816,6 +869,7 @@ class CNN:
         self.dimbiais = dico["dimbiais"]
         self.convlay = dico["convlay"]
         self.lay = dico["lay"]
+        self.base = dico["base"]
 
     def exportmodel(self, namefile):
         # POUR ENREGISTRER LES PARAMETRES
@@ -830,7 +884,7 @@ class CNN:
         tab = {"parameters": dico, "nbconv": self.nbconv, "nblay": self.nblay, "convdims": self.convdims, "dimweights": self.dimweights, "lenkernel": self.lenkernel,
                "padding": self.padding, "stride": self.stride, "poolstride": self.poolstride, "lenkernelpool": self.lenkernelpool,
                "lenbatch": self.lenbatch, "pix": self.pix, "vales": self.vales, "qcmpix": self.qcmpix, "qcmval": self.qcmval, "dimbiais": self.dimbiais,
-               "convlay": self.convlay, "lay": self.lay}
+               "convlay": self.convlay, "lay": self.lay, "base": self.base}
 
         with open(namefile, "wb") as file:
             pickle.dump(tab, file)
@@ -857,20 +911,19 @@ class CNN:
         plt.title('Fonction de Erreur')
         plt.show()
 
-base = "mnist"
+base = "ciphar-10"
 inputs = takeinputs(base) #"mnist" #"fashion" #ciphar-10
 
 val, pix, qcmval, qcmpix, labels = inputs
 
-convlay = [(1, "input"), (10, "relu", True), (5, "relu", True)]
+convlay = [(1, "input"), (10, "relu", True)]
 
 lay = [(32, "sigmoid"), (10, "softmax")]
 
 parametros = Parametros(pix=pix, vales=val, qcmpix=qcmpix, qcmval=qcmval, labels=labels,
-                        infolay=lay, infoconvlay=convlay, iterations=10, coefcv=0.001, base=base)
+                        infolay=lay, infoconvlay=convlay, iterations=1, coefcv=0.001, base=base)
 
 g = CNN(parametros)
-
 
 # g.train()
 #
@@ -884,12 +937,14 @@ g = CNN(parametros)
 #
 # t0 = g.tauxerreur()
 #
+# print(g.base)
+
 # for i in range(30):
 #     g.TryToDraw()
 #
 # t = g.tauxerreur()
 #
-# if t > t0:
+# if t >= t0:
 #     print("ME HE SUPERADO MUCHO!!!!")
 #     g.exportmodel("BestModels/bestmodelmnist")
 
@@ -903,7 +958,4 @@ g = CNN(parametros)
 #
 # print("jai fini en :", time.time()-t)
 # g.tauxerreur()
-#
-#
-# g.prediction(g.pix[10])
 
