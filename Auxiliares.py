@@ -52,13 +52,13 @@ def takeinputs(basededonnees):
         return fashion_val_entraine, fashion_pix_entraine, fashion_val_test, fashion_pix_test, labels_fashion
 
     elif basededonnees == "ciphar-10":
-        with open('Datas/Ciphar-10/pixentraine_cifar10', 'rb') as f:
+        with open('Datas/Ciphar-10/pixentraine_cifar', 'rb') as f:
             ciphar_pixentraine = pickle.load(f)
-        with open("Datas/Ciphar-10/valentraine_cifar10", "rb") as f:
+        with open("Datas/Ciphar-10/valentraine_cifar", "rb") as f:
             ciphar_valentraine = pickle.load(f)
-        with open("Datas/Ciphar-10/pixtest_cifar10", "rb") as f:
+        with open("Datas/Ciphar-10/pixtest_cifar", "rb") as f:
             ciphar_pixtest = pickle.load(f)
-        with open("Datas/Ciphar-10/valtest_cifar10", "rb") as f:
+        with open("Datas/Ciphar-10/valtest_cifar", "rb") as f:
             ciphar_valtest = pickle.load(f)
 
         labels_ciphar = {0: 'airplane', 1: 'automobile', 2: 'bird', 3: 'cat', 4: 'deer', 5: 'dog', 6: 'frog', 7: 'horse', 8: 'ship', 9: 'truck'}

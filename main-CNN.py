@@ -857,8 +857,8 @@ class CNN:
         plt.title('Fonction de Erreur')
         plt.show()
 
-base = "fashion"
-inputs = takeinputs() #"mnist" #"fashion" #ciphar-10
+base = "mnist"
+inputs = takeinputs(base) #"mnist" #"fashion" #ciphar-10
 
 val, pix, qcmval, qcmpix, labels = inputs
 
@@ -896,14 +896,14 @@ g = CNN(parametros)
 
 # MODELE A ENTRAINÉ
 
-print("je commence a mentrainer")
-t = time.time()
-
-g.train()
-
-print("jai fini en :", time.time()-t)
-g.tauxerreur()
-
-
-g.prediction(g.pix[10])
+# print("je commence a mentrainer")
+# t = time.time()
+#
+# g.train()
+#
+# print("jai fini en :", time.time()-t)
+# g.tauxerreur()
+#
+#
+# g.prediction(g.pix[10])
 
