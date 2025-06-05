@@ -1,25 +1,21 @@
 #GENERAL
-import time
 import pickle
-from PIL import Image
+from dataclasses import dataclass
+import time
 
 import numpy as np
-from scipy.special import expit
-
-from dataclasses import dataclass
-
-#CONV
-from scipy.signal import correlate2d
-from scipy.signal import convolve2d
-
-from skimage.measure import block_reduce
-
-#PRINT
-from tabulate import tabulate
 from matplotlib import pyplot as plt
+from scipy.signal import convolve2d
+# CONV
+from scipy.signal import correlate2d
+from scipy.special import expit
+from skimage.measure import block_reduce
+# PRINT
+from tabulate import tabulate
 
-#ORGANIZACION
+# ORGANIZACION
 from Auxiliares import takeinputs, Draw
+
 
 # PARA EL FUTURO:
 # - batch para convolucion
@@ -115,7 +111,7 @@ class CNN:
         else:
             self.backconvolution = self.backconvolutionscp
 
-        d = 28
+        d = 28 if self.base=="mnist" or self.base=="fashion" else par.pix[0].shape[1]
         for i in range(self.nbconv): # CRÉER LES DIMENSIONS D'OUTPUT CONV LAYERS
             dim = int(((d + 2 * self.padding - self.lenkernel) / self.stride) + 1) #dimension apres convolution
             if par.infoconvlay[i+1][2]:
@@ -179,6 +175,8 @@ class CNN:
         self.convlay = par.infoconvlay
         self.lay = par.infolay
 
+        self.tauxinitial = self.tauxerreur()
+
     def printbasesimple(self, base):
         print(tabulate(base.reshape((28, 28))))
 
@@ -198,30 +196,6 @@ class CNN:
 
     def converttogreyscale(self,rgbimage):
         return np.tensordot(rgbimage,np.array([0.299, 0.587, 0.114]), (1, 2))
-
-    def processdatabis(self, pix, color, qcm, conv): #mettre les donnees sous la bonne forme
-        if conv:
-                if qcm:
-                    if color:
-                        datamod = [pix[:, a].reshape(3, 32, 32) for a in range(pix.shape[1])]
-                    else:
-                        datamod = [pix[:,a].reshape(1, 28,28) for a in range(pix.shape[1])]
-                else:
-                    if color:
-                        datamod = [pix[:, a].reshape(3, 32, 32) / 255 for a in range(pix.shape[1])]
-                    else:
-                        datamod = [pix[:,a].reshape(1, 28,28) / 255 for a in range(pix.shape[1])]
-
-        else: #si pas convolution direct avec numpy
-            if color:
-                pix = self.converttogreyscale(pix)
-
-            if qcm:
-                datamod = pix
-            else:
-                datamod = pix/255
-
-        return datamod
 
     def processdata(self, pix, qcm, conv):
 
@@ -262,7 +236,7 @@ class CNN:
                 datamod = [self.converttogreyscale(i).reshape(-1, 1) for i in pix] #NO ESTA BIEN AUN ESTE CREO
                 final = np.array(datamod[0])
                 for i in range(1, len(datamod)):
-                    final = np.concatenate((final, datamod[i]), axes=1)
+                    final = np.concatenate([final, datamod[i]], axes=1)
 
                 datamod = final
 
@@ -384,35 +358,35 @@ class CNN:
         else:
             raise "You forgot to specify the activation function"
 
-    def convolutionnp(self, image, kernel, *, dimout=None, mode="valid", reverse=False):  # 2 casos dependiendo de shape kernel y imagen
-        lenkernel = kernel.shape  # Csortie, Centree, H,L
+    def convolutionnp(self, image, kernel, *, mode="valid", reverse=False):  # 2 casos dependiendo de shape kernel y imagen
+            lenkernel = kernel.shape  # Csortie, Centree, H,L
 
-        if mode == "full":
-            newimage = self.paddington(image, lenkernel[2]-1, lenkernel[3]-1)
-        elif mode == "valid":
-            newimage = image
-        else:
-            raise ValueError("mode must be 'full' or 'valid'")
+            if mode == "full":
+                newimage = self.paddington(image, lenkernel[2]-1, lenkernel[3]-1)
+            elif mode == "valid":
+                newimage = image
+            else:
+                raise ValueError("mode must be 'full' or 'valid'")
 
-        if len(lenkernel) == 4:
+            if len(lenkernel) == 4:
 
-            mapa = np.lib.stride_tricks.sliding_window_view(newimage, (lenkernel[2], lenkernel[3]), axis=(1, 2)) #CREER VISION EN WINDOWS IMAGE
+                mapa = np.lib.stride_tricks.sliding_window_view(newimage, (lenkernel[2], lenkernel[3]), axis=(1, 2)) #CREER VISION EN WINDOWS IMAGE
 
-            if not reverse: #forward prop
-                output = np.tensordot(mapa, kernel, axes=([0, 3, 4], [1, 2, 3])).transpose((2, 0, 1))
-            else: #backprop
-                output = np.tensordot(mapa, kernel, axes=([0, 3, 4], [0, 2, 3])).transpose((2, 0, 1))
+                if not reverse: #forward prop
+                    output = np.tensordot(mapa, kernel, axes=([0, 3, 4], [1, 2, 3])).transpose((2, 0, 1))
+                else: #backprop
+                    output = np.tensordot(mapa, kernel, axes=([0, 3, 4], [0, 2, 3])).transpose((2, 0, 1))
 
-        elif len(lenkernel) == 3: #cas ou le kernel a que 3 dimensions au lieu de 4
+            elif len(lenkernel) == 3: #cas ou le kernel a que 3 dimensions au lieu de 4
 
-            mapa = np.lib.stride_tricks.sliding_window_view(newimage, (lenkernel[1], lenkernel[2]), axis=(1, 2))
+                mapa = np.lib.stride_tricks.sliding_window_view(newimage, (lenkernel[1], lenkernel[2]), axis=(1, 2))
 
-            output = np.tensordot(mapa, kernel, axes=([3, 4], [1, 2])).transpose(3,0,1,2)
+                output = np.tensordot(mapa, kernel, axes=([3, 4], [1, 2])).transpose(3,0,1,2)
 
-        else:
-            raise ValueError("Problem with the shapes they are not good")
+            else:
+                raise ValueError("Problem with the shapes they are not good")
 
-        return output
+            return output
 
     def convolutionscp(self, image, kernel, *, dimout=None, mode=None, reverse=None):
 
@@ -679,6 +653,9 @@ class CNN:
             self.trainbatch()
         elif self.lenbatch == 1:
             self.trainsimple()
+
+        if self.tauxerreur()>self.tauxinitial:
+            self.exportmodel("BestModels/bestmodel" + self.base)
         return
 
     def trainsimple(self):
@@ -825,17 +802,19 @@ class CNN:
         print(f"Je crois bien que cela est un {self.labels[decision[0]]}")
 
         try:
-            verdadero = int(input("Que numero es realmente? : "))
+            verdadero = input("Que es realmente? : ")
         except:
             print("NO has puesto el buen type")
             verdadero = None
 
-        if self.base == "mnist":
-            if verdadero is not None and verdadero != decision:
+        if verdadero is not None and verdadero != decision:
+            if self.base == "mnist":
                 print("Vale intentare mejorar para la proxima vez")
-                dw, db, _, dc, dcb = self.backprop(self.vecteur(verdadero), forw[1], forw[2], forw[3], forw[4], 1, False)
+                dw, db, _, dc, dcb = self.backprop(self.vecteur(int(verdadero)), forw[1], forw[2], forw[3], forw[4], 1, False)
 
                 self.actualiseweights(dw, db, 1, dc, dcb)
+            else:
+                pass
 
         return
 
@@ -911,17 +890,18 @@ class CNN:
         plt.title('Fonction de Erreur')
         plt.show()
 
+
 base = "ciphar-10"
 inputs = takeinputs(base) #"mnist" #"fashion" #ciphar-10
 
 val, pix, qcmval, qcmpix, labels = inputs
 
-convlay = [(1, "input"), (10, "relu", True)]
+convlay = [(3, "input"), (10, "relu", True)]
 
 lay = [(32, "sigmoid"), (10, "softmax")]
 
 parametros = Parametros(pix=pix, vales=val, qcmpix=qcmpix, qcmval=qcmval, labels=labels,
-                        infolay=lay, infoconvlay=convlay, iterations=1, coefcv=0.001, base=base)
+                        infolay=lay, infoconvlay=convlay, iterations=5, coefcv=0.01, base=base)
 
 g = CNN(parametros)
 
@@ -951,11 +931,11 @@ g = CNN(parametros)
 
 # MODELE A ENTRAINÉ
 
-# print("je commence a mentrainer")
-# t = time.time()
-#
-# g.train()
-#
-# print("jai fini en :", time.time()-t)
-# g.tauxerreur()
+print("je commence a mentrainer")
+t = time.time()
+
+g.train()
+
+print("jai fini en :", time.time()-t)
+g.tauxerreur()
 
