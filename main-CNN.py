@@ -849,6 +849,7 @@ class CNN:
         self.convlay = dico["convlay"]
         self.lay = dico["lay"]
         self.base = dico["base"]
+        # self.tauxinitial = dico["tauxinitial"]
 
     def exportmodel(self, namefile):
         # POUR ENREGISTRER LES PARAMETRES
@@ -863,7 +864,7 @@ class CNN:
         tab = {"parameters": dico, "nbconv": self.nbconv, "nblay": self.nblay, "convdims": self.convdims, "dimweights": self.dimweights, "lenkernel": self.lenkernel,
                "padding": self.padding, "stride": self.stride, "poolstride": self.poolstride, "lenkernelpool": self.lenkernelpool,
                "lenbatch": self.lenbatch, "pix": self.pix, "vales": self.vales, "qcmpix": self.qcmpix, "qcmval": self.qcmval, "dimbiais": self.dimbiais,
-               "convlay": self.convlay, "lay": self.lay, "base": self.base}
+               "convlay": self.convlay, "lay": self.lay, "base": self.base, "tauxinitial": self.tauxinitial}
 
         with open(namefile, "wb") as file:
             pickle.dump(tab, file)
@@ -891,12 +892,12 @@ class CNN:
         plt.show()
 
 
-base = "ciphar-10"
+base = "mnist"
 inputs = takeinputs(base) #"mnist" #"fashion" #ciphar-10
 
 val, pix, qcmval, qcmpix, labels = inputs
 
-convlay = [(3, "input"), (10, "relu", True)]
+convlay = [(1, "input"), (10, "relu", True)]
 
 lay = [(32, "sigmoid"), (10, "softmax")]
 
@@ -913,15 +914,15 @@ g = CNN(parametros)
 
 # MODEL ENTRAINÉ
 
-# g.importmodel("BestModels/bestmodelmnist")
-#
-# t0 = g.tauxerreur()
-#
-# print(g.base)
+g.importmodel("BestModels/bestmodelmnist")
 
-# for i in range(30):
-#     g.TryToDraw()
-#
+t0 = g.tauxerreur()
+
+print(g.base)
+
+for i in range(30):
+    g.TryToDraw()
+
 # t = g.tauxerreur()
 #
 # if t >= t0:
@@ -931,11 +932,11 @@ g = CNN(parametros)
 
 # MODELE A ENTRAINÉ
 
-print("je commence a mentrainer")
-t = time.time()
-
-g.train()
-
-print("jai fini en :", time.time()-t)
-g.tauxerreur()
+# print("je commence a mentrainer")
+# t = time.time()
+#
+# g.train()
+#
+# print("jai fini en :", time.time()-t)
+# g.tauxerreur()
 
