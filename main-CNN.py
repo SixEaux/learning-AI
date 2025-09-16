@@ -20,7 +20,11 @@ from Auxiliares import takeinputs, Draw
 # PARA EL FUTURO:
 # - batch para convolucion
 # - Dropout layer
-# - faire avec des images en couleur (ciphar)
+# - try to draw continuo que no se cierre la pestaña
+# - import directamente en la clase para que sea mas facil
+# - mejorar estructura
+# - guardar mejor modelo directamente la instance con pickle
+
 
 @dataclass
 class Parametros:
@@ -111,7 +115,10 @@ class CNN:
         else:
             self.backconvolution = self.backconvolutionscp
 
+        par.infoconvlay = [(1 if self.base=="mnist" or self.base=="fashion" else 3, "input")] + par.infoconvlay
+
         d = 28 if self.base=="mnist" or self.base=="fashion" else par.pix[0].shape[1]
+
         for i in range(self.nbconv): # CRÉER LES DIMENSIONS D'OUTPUT CONV LAYERS
             dim = int(((d + 2 * self.padding - self.lenkernel) / self.stride) + 1) #dimension apres convolution
             if par.infoconvlay[i+1][2]:
@@ -254,7 +261,7 @@ class CNN:
             param["cl" + str(c-1)] = np.random.uniform(-1, 1, size= (infoconvlay[c][0], infoconvlay[c-1][0], self.lenkernel, self.lenkernel)) # kernel: (nb canaux sortie, nb canaux entree, hauteur filtre, largeur filtre)
             self.dimkernels.append((infoconvlay[c][0], infoconvlay[c-1][0], self.lenkernel, self.lenkernel))
 
-            param["cb" + str(c-1)] = np.zeros((infoconvlay[c][0], self.convdims[c-1][0], self.convdims[c-1][0])) # biais: canaux sortie, hauteur output, largeur output
+            param["cb" + str(c-1)] = np.zeros((infoconvlay[c][0], self.convdims[c-1][0], self.convdims[c-1][0])) # biais: (canaux sortie, hauteur output, largeur output)
             self.dimconvbiais.append((infoconvlay[c][0], self.convdims[c-1][0], self.convdims[c-1][0]))
 
             param["fctcl" + str(c-1)] = self.getfct(infoconvlay[c][1])
@@ -403,6 +410,10 @@ class CNN:
 
         return output
 
+    def poolingnp(self, image):
+        division = np.lib.stride_tricks.sliding_window_view(image, (self.lenkernelpool, self.lenkernelpool), axis=(1, 2))[:, ::self.lenkernelpool, ::self.lenkernelpool]
+        return np.average(division, axis=(3, 4))
+
     def poolingskim(self, image):
         d, h, l = image.shape
 
@@ -423,10 +434,6 @@ class CNN:
                 output[c] = block_reduce(image[c], (self.lenkernelpool, self.lenkernelpool), func=np.mean)[:newdims[1], :newdims[2]]
 
         return output
-
-    def poolingnp(self, image):
-        division = np.lib.stride_tricks.sliding_window_view(image, (self.lenkernelpool, self.lenkernelpool), axis=(1, 2))[:, ::self.lenkernelpool, ::self.lenkernelpool]
-        return np.average(division, axis=(3, 4))
 
     def flatening(self, image):
         return image.reshape((-1,1))
@@ -897,7 +904,7 @@ inputs = takeinputs(base) #"mnist" #"fashion" #ciphar-10
 
 val, pix, qcmval, qcmpix, labels = inputs
 
-convlay = [(1, "input"), (10, "relu", True)]
+convlay = [(10, "relu", True)]
 
 lay = [(32, "sigmoid"), (10, "softmax")]
 
@@ -914,14 +921,14 @@ g = CNN(parametros)
 
 # MODEL ENTRAINÉ
 
-g.importmodel("BestModels/bestmodelmnist")
-
-t0 = g.tauxerreur()
-
-print(g.base)
-
-for i in range(30):
-    g.TryToDraw()
+# g.importmodel("BestModels/bestmodelmnist")
+#
+# t0 = g.tauxerreur()
+#
+# print(g.base)
+#
+# for i in range(30):
+#     g.TryToDraw()
 
 # t = g.tauxerreur()
 #
