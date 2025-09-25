@@ -88,7 +88,7 @@ class CNN:
         self.cvcoef = par.coefcv #learning rate
 
         # POUR CNN
-        self.nbconv = len(par.infoconvlay) - 1
+        self.nbconv = len(par.infoconvlay)
         self.lenkernel = par.kernel #lado filtro
         self.padding = 0 #par.padding #espacio con bordes
         self.stride = 1 #par.stride #de cuanto se mueve el filtro
@@ -913,11 +913,11 @@ parametros = Parametros(pix=pix, vales=val, qcmpix=qcmpix, qcmval=qcmval, labels
 
 g = CNN(parametros)
 
-# g.train()
-#
-# g.printgray(g.pix[10])
-#
-# g.tauxerreur()
+g.train()
+
+g.printgray(g.pix[10])
+
+g.tauxerreur()
 
 # MODEL ENTRAINÉ
 
@@ -927,9 +927,9 @@ g = CNN(parametros)
 #
 # print(g.base)
 #
-# for i in range(30):
+# for i in range(10):
 #     g.TryToDraw()
-
+#
 # t = g.tauxerreur()
 #
 # if t >= t0:
