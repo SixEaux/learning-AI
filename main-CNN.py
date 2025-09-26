@@ -913,11 +913,11 @@ parametros = Parametros(pix=pix, vales=val, qcmpix=qcmpix, qcmval=qcmval, labels
 
 g = CNN(parametros)
 
-g.train()
-
-g.printgray(g.pix[10])
-
-g.tauxerreur()
+# g.train()
+#
+# g.printgray(g.pix[10])
+#
+# g.tauxerreur()
 
 # MODEL ENTRAINÉ
 
