@@ -24,6 +24,8 @@ from Auxiliares import takeinputs, Draw
 # - import directamente en la clase para que sea mas facil
 # - mejorar estructura
 # - guardar mejor modelo directamente la instance con pickle
+# - opti learning rate
+# - verifier que cost diminue
 
 
 @dataclass
@@ -62,14 +64,6 @@ class Parametros:
     poolnp: bool = True
     convnp: bool = True
     backconvnp: bool = True
-
-    # ADAPTATIVES FACILES
-    adaptcost: bool = False # ADAPTE EN FONCTION DU COUT (DESCEND TROP VITE)
-
-    adaptpente: bool = False # ADAPTE EN FONCTION DE LA PENTE (DESCEND TROP VITE)
-    multiplicatif: float = 0.001
-
-    adapttauxerreur: bool = False # ADAPTE EN FONCTION DU TAUX D'ERREUR (PAS OUF MAIS MIEUX QUE LES PRECEDENTS)
 
     # ADAPTATIVE AVANCÉ
     RMSprop: bool = False # BASÉ SUR LES MOYENNE MOBILE DES COUTS MAIS NE MARCHE PAS ENCORE
@@ -157,20 +151,8 @@ class CNN:
         self.graph = par.graph # est-ce qu'il dessine des graphs a la fin
         self.tauxfiniter = par.tauxfiniter # faire ou non a la fin de chaque itération un calcul de taux d'erreur
 
-        # LEARNING RATE ADAPTATIF BASE SUR LA FONCTION DE COUT
-        self.adaptcost = par.adaptcost
-        self.coutinitial = None
-        self.mincoef = 0.000001 # COEFICIENT MINIMUM LR
-
-        self.adaptpente = par.adaptpente if not self.adaptcost else False # adapter en fonction de la pente
-        self.coutprecedent = 1e10
-        self.multiplicatif = par.multiplicatif
-
-        self.adapttaux = par.adapttauxerreur if not (self.adaptcost or self.adaptpente) else False #s'adapter en fonction du taux erreur calculé à chaque iteration
-        self.tauxprecedent = 0
-
         # PARA LEARNING RATE ADAPTATIF (basé sur RMSprop) (ne fonctionne pas totalement encore)
-        self.RMSprop = par.RMSprop if not (self.adaptcost or self.adaptpente or self.adapttaux) else False  # si l'autre est activé on le désactive
+        self.RMSprop = par.RMSprop  # si l'autre est activé on le désactive
         self.beta = par.beta # decay rate
         #POUR GARDER LES MOYENNES DES GRADIENTS DES PARAMETRES
         self.moyencl = [np.zeros(i) for i in self.dimkernels]
@@ -539,9 +521,6 @@ class CNN:
     def backprop(self, expected, zslay, zsconv, activationslay, activationsconv, nbinp, premier):
         C = self.errorfunc[0](activationslay[-1], expected, nbinp) #Calcular error
 
-        if premier and self.adaptcost:
-            self.coutinitial = C
-
         #crear los outputs
         dw = [np.zeros(self.dimweights[i]) for i in range(self.nblay)]
         db = [np.zeros((self.dimweights[i][0], 1)) for i in range(self.nblay)]
@@ -598,16 +577,6 @@ class CNN:
 
                 dc[c] += gradc
                 dcb[c] += delta
-
-        if self.adaptcost:
-            self.cvcoef = max(self.mincoef, min(self.cvcoef, self.cvcoef * (C/self.coutinitial)))
-        elif self.adaptpente:
-            pente = self.coutprecedent - C
-            if pente > 0:
-                self.cvcoef *= 1 + self.multiplicatif
-            elif pente < 0:
-                self.cvcoef *= 1 - self.multiplicatif
-            self.coutprecedent = C
 
         return dw, db, C, dc, dcb
 
@@ -709,14 +678,6 @@ class CNN:
                 if self.tauxfiniter:
                     print("___________________________________________________________________________________________________________")
                     print(f"Le taux à l'itération {i} est de {self.tauxlent()}")
-
-                if self.adapttaux:
-                    eror = self.tauxlent()
-                    print(eror)
-                    if eror - self.tauxprecedent > 0:
-                        self.cvcoef *= 1.005
-                    elif eror - self.tauxprecedent < 0:
-                        self.cvcoef *= 0.995
 
             if self.graph:
                 print(C)
