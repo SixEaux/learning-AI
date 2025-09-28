@@ -1,7 +1,6 @@
 #GENERAL
 import pickle
 from dataclasses import dataclass
-import time
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -14,7 +13,7 @@ from skimage.measure import block_reduce
 from tabulate import tabulate
 
 # ORGANIZACION
-from Auxiliares import takeinputs, Draw
+from CNN.Auxiliares import takeinputs, Draw
 
 
 # PARA EL FUTURO:
