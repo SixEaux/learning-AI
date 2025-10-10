@@ -1,6 +1,8 @@
 #GENERAL
 import pickle
 from dataclasses import dataclass
+import sys
+import os
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -13,7 +15,7 @@ from skimage.measure import block_reduce
 from tabulate import tabulate
 
 # ORGANIZACION
-from CNN.Auxiliares import takeinputs, Draw
+from Auxiliares import takeinputs, Draw
 
 
 # PARA EL FUTURO:
@@ -881,20 +883,20 @@ g = CNN(parametros)
 
 # MODEL ENTRAINÉ
 
-# g.importmodel("BestModels/bestmodelmnist")
-#
-# t0 = g.tauxerreur()
-#
-# print(g.base)
-#
-# for i in range(10):
-#     g.TryToDraw()
-#
-# t = g.tauxerreur()
-#
-# if t >= t0:
-#     print("ME HE SUPERADO MUCHO!!!!")
-#     g.exportmodel("BestModels/bestmodelmnist")
+g.importmodel("BestModels/bestmodelmnist")
+
+t0 = g.tauxerreur()
+
+print(g.base)
+
+for i in range(10):
+    g.TryToDraw()
+
+t = g.tauxerreur()
+
+if t >= t0:
+    print("ME HE SUPERADO MUCHO!!!!")
+    g.exportmodel("BestModels/bestmodelmnist")
 
 
 # MODELE A ENTRAINÉ
