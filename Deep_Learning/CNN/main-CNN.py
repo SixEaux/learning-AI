@@ -1,8 +1,16 @@
+"""This CNN is not very well coded i am conscious.
+It is a work in progress, it was more to try to code it without insight just trying to make it work.
+I am recoding it more clearly, well structured and better performance.
+
+Thongs to improve for next time:
+    - separate the classes
+    - improve how the parameters are passed (not a list with neurons)
+    - make batch for CNN
+    - look up if it is better with numpy or scipy (i think numpy)"""
+
 #GENERAL
 import pickle
 from dataclasses import dataclass
-import sys
-import os
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -16,7 +24,6 @@ from tabulate import tabulate
 
 # ORGANIZACION
 from Auxiliares import takeinputs, Draw
-
 
 # PARA EL FUTURO:
 # - batch para convolucion
@@ -883,20 +890,20 @@ g = CNN(parametros)
 
 # MODEL ENTRAINÉ
 
-g.importmodel("BestModels/bestmodelmnist")
-
-t0 = g.tauxerreur()
-
-print(g.base)
-
-for i in range(10):
-    g.TryToDraw()
-
-t = g.tauxerreur()
-
-if t >= t0:
-    print("ME HE SUPERADO MUCHO!!!!")
-    g.exportmodel("BestModels/bestmodelmnist")
+# g.importmodel("BestModels/bestmodelmnist")
+#
+# t0 = g.tauxerreur()
+#
+# print(g.base)
+#
+# for i in range(10):
+#     g.TryToDraw()
+#
+# t = g.tauxerreur()
+#
+# if t >= t0:
+#     print("ME HE SUPERADO MUCHO!!!!")
+#     g.exportmodel("BestModels/bestmodelmnist")
 
 
 # MODELE A ENTRAINÉ
