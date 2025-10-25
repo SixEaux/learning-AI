@@ -1,4 +1,4 @@
-# Discovering AI
+# Learn AI
 
 The idea of this project is to learn the basis of AI from scratch. 
 
