@@ -1,0 +1,17 @@
+Deep_Learning/CNN/Datas/Geoguessr/
+
+Deep_Learning/CNN/Datas/Ciphar-10/cifar-10-batches-py/
+
+Deep_Learning/CNN/Datas/Ciphar-10/cifar-10-python.tar.gz
+
+Deep_Learning/CNN/Datas/fashion-mnist/fashion-mnist_test.csv
+
+Deep_Learning/CNN/Datas/Mnist/mnist_test.csv
+
+Deep_Learning/CNN/Datas/Mnist/mnist_train.csv
+
+__pycache__
+
+.idea
+
+.venv

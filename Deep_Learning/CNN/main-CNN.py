@@ -10,7 +10,6 @@ Thongs to improve for next time:
 
 #GENERAL
 import pickle
-from dataclasses import dataclass
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -19,11 +18,13 @@ from scipy.signal import convolve2d
 from scipy.signal import correlate2d
 from scipy.special import expit
 from skimage.measure import block_reduce
-# PRINT
-from tabulate import tabulate
 
 # ORGANIZACION
-from Auxiliares import takeinputs, Draw
+from Import_data import takeinputs
+from Deep_Learning.CNN.Parameters import Parametros
+from Drawing import Draw
+from Helpers import processdata, printbasesimple, printgray, printimage
+from Functions import geterrorfunc, getfct
 
 # PARA EL FUTURO:
 # - batch para convolucion
@@ -34,48 +35,6 @@ from Auxiliares import takeinputs, Draw
 # - guardar mejor modelo directamente la instance con pickle
 # - opti learning rate
 # - verifier que cost diminue
-
-
-@dataclass
-class Parametros:
-    # DATASET
-    base: str
-    pix : list or np.ndarray
-    vales : np.ndarray
-    qcmpix: list or np.ndarray
-    qcmval: np.ndarray
-    labels: dict
-
-    # LISTES DES COUCHES
-    infolay: list #LISTE AVEC (NOMBRE DE NEURONES, FCT ACTIVATION)
-    infoconvlay: list # (NOMBRE DE FILTRES, FCT ACTIVATION, BOOL TRUE SI POOLING APRES CONVOLUTION)
-
-    # PRENDRE LES PARAMETRES D'UN MODELE DEJA ENTRAINE
-    modeldejaentraine: bool = False
-
-    iterations: int = 5 # NOMBRE ITERATIONS SUR LES DONNEES DE TRAIN
-    coefcv: float = 0.1 # LEARNING RATE
-    batch: int = 1 # LONGUEUR BATCH (SEULEMENT POUR MULTICOUCHE POUR L'INSTANT
-    errorfunc: str = "CEL" # FCT DE COUT
-
-    apprentissagedynamique: bool = False # ESTCE QU'IL APPREND SUR LES TESTS PENDANT LE TEST
-    graph: bool = False # DESSINE DES GRAPHIQUES
-    tauxfiniter: bool = False # ESTCE QU'IL FAIT LE QCM A LA FIN DE CHAQUE ITERATION
-
-    #CNN
-    kernel: int = 3 # DIMENSION KERNEL
-    kernelpool: int = 2 # DIMENSION FILTRE DE POOLING
-    padding: int = 0 # RESTE A ZERO POUR L'INSTANT
-    stride: int = 1 # RESTE A 1 POUR L'INSTANT
-
-    # LAISSER A TRUE CEST LES FONCTIONS PLUS OPTIMISÉES
-    poolnp: bool = True
-    convnp: bool = True
-    backconvnp: bool = True
-
-    # ADAPTATIVE AVANCÉ
-    RMSprop: bool = False # BASÉ SUR LES MOYENNE MOBILE DES COUTS MAIS NE MARCHE PAS ENCORE
-    beta: float = 0.9
 
 class CNN:
     def __init__(self, par = Parametros):
@@ -138,14 +97,14 @@ class CNN:
 
         # INPUTS POUR ENTRAINEMENT
         # self.pix = self.processdata(par.pix, par.pix.shape[0]==3072, False, self.nbconv>0) #pix de train
-        self.pix = self.processdata(par.pix, False, self.nbconv > 0)
+        self.pix = processdata(par.pix, False, self.nbconv > 0)
         self.vales = par.vales #val de train
         self.labels = par.labels
 
 
         # BASE DE DONNÉES POUR LES TESTS
         # self.qcmpix = self.processdata(par.qcmpix, par.pix.shape[0]==3072, True, self.nbconv>0)
-        self.qcmpix = self.processdata(par.qcmpix,True, self.nbconv > 0)
+        self.qcmpix = processdata(par.qcmpix,True, self.nbconv > 0)
         self.qcmval = par.qcmval
 
         self.dimweights = []  # dimensiones pesos para backprop
@@ -153,7 +112,7 @@ class CNN:
 
         self.parameters = self.params(par.infolay, par.infoconvlay) #creer les parametres dans un dico/ infolay doit avoir tout au debut la longueur de l'input
 
-        self.errorfunc = self.geterrorfunc(par.errorfunc) #choisir la fonction d'erreur
+        self.errorfunc = geterrorfunc(par.errorfunc) #choisir la fonction d'erreur
 
         self.aprentissagedynamique = par.apprentissagedynamique # estce qu'il apprned au fur et à mesure qu'il passe le qcm
         self.graph = par.graph # est-ce qu'il dessine des graphs a la fin
@@ -174,74 +133,8 @@ class CNN:
 
         self.tauxinitial = self.tauxerreur()
 
-    def printbasesimple(self, base):
-        print(tabulate(base.reshape((28, 28))))
-
-    def printgray(self, base, titre="", dims=(28, 28)):
-        img = base.reshape(dims)
-        plt.imshow(img, cmap='gray', interpolation='nearest')
-        plt.title(titre)
-        plt.colorbar(label='Value')
-        plt.show()
-
-    def printimage(self, base, titre=""):
-        img = base.transpose(1,2,0)
-        plt.imshow(img)
-        plt.axis("off")
-        plt.title(titre)
-        plt.show()
-
     def converttogreyscale(self,rgbimage):
         return np.tensordot(rgbimage,np.array([0.299, 0.587, 0.114]), (1, 2))
-
-    def processdata(self, pix, qcm, conv):
-
-        if conv:
-            if self.base == "mnist":
-                if qcm:
-                    datamod = [pix[:, a].reshape(1, 28, 28) for a in range(pix.shape[1])]
-                else:
-                    datamod = [pix[:, a].reshape(1, 28, 28) / 255 for a in range(pix.shape[1])]
-
-            elif self.base == "fashion":
-                if qcm:
-                    datamod = [pix[:, a].reshape(1, 28, 28) for a in range(pix.shape[1])]
-                else:
-                    datamod = [pix[:, a].reshape(1, 28, 28) / 255 for a in range(pix.shape[1])]
-
-            elif self.base == "ciphar-10":
-                datamod = pix
-
-            else:
-                print("Je n'ai pas encore fait cela") #IL FAUT ICI AJOUTER POUR DETECTER TYPE INPUT
-                raise TypeError
-
-        else:
-            if self.base == "mnist":
-                if qcm:
-                    datamod = pix
-                else:
-                    datamod = pix / 255
-
-            elif self.base == "fashion":
-                if qcm:
-                    datamod = pix
-                else:
-                    datamod = pix / 255
-
-            elif self.base == "ciphar-10":
-                datamod = [self.converttogreyscale(i).reshape(-1, 1) for i in pix] #NO ESTA BIEN AUN ESTE CREO
-                final = np.array(datamod[0])
-                for i in range(1, len(datamod)):
-                    final = np.concatenate([final, datamod[i]], axes=1)
-
-                datamod = final
-
-            else:
-                print("Je n'ai pas encore fait cela")  # IL FAUT ICI AJOUTER POUR DETECTER TYPE INPUT
-                raise TypeError
-
-        return datamod
 
 
     def params(self, infolay, infoconvlay): #infolay liste avec un tuple avec (nbneurons, fctactivation) / infoconvlay (nbfiltres, fct)
@@ -254,7 +147,7 @@ class CNN:
             param["cb" + str(c-1)] = np.zeros((infoconvlay[c][0], self.convdims[c-1][0], self.convdims[c-1][0])) # biais: (canaux sortie, hauteur output, largeur output)
             self.dimconvbiais.append((infoconvlay[c][0], self.convdims[c-1][0], self.convdims[c-1][0]))
 
-            param["fctcl" + str(c-1)] = self.getfct(infoconvlay[c][1])
+            param["fctcl" + str(c-1)] = getfct(infoconvlay[c][1], self.cvcoef)
             param["pool" + str(c-1)] = infoconvlay[c][2]
 
             self.convdims[c-1] = (self.convdims[c-1][0], self.convdims[c-1][1], infoconvlay[c-1][0], infoconvlay[c][0]) #añadir el numero filtros entrada y salida
@@ -268,92 +161,10 @@ class CNN:
             param["b" + str(l-1)] = np.zeros((infolay[l][0], 1))
             self.dimbiais.append((infolay[l][0], 1))
 
-            param["fct" + str(l-1)] = self.getfct(infolay[l][1])[0]
-            param["diff" + str(l-1)] = self.getfct(infolay[l][1])[1]
+            param["fct" + str(l-1)] = getfct(infolay[l][1], self.cvcoef)[0]
+            param["diff" + str(l-1)] = getfct(infolay[l][1], self.cvcoef)[1]
 
         return param
-
-    def geterrorfunc(self, errorfunc): #exp est un onehotvect
-        if errorfunc == "eqm":
-            def eqm(obs, exp, nbinput):
-                return (np.sum((obs - exp) ** 2, axis=0))/ (2 * nbinput)
-            def eqmdif(obs, expected, nbinput):
-                return  (obs - expected)/nbinput
-            return [eqm, eqmdif]
-
-        elif errorfunc == "CEL":
-            def CEL(obs, exp, nbinput):
-                return -np.sum(exp * np.log(np.clip(obs, 1e-9, 1 - 1e-9)), axis=0) / nbinput
-            def CELdif(obs, exp, nbinput):
-                return (obs - exp) / nbinput
-            return [CEL, CELdif]
-
-        else:
-            raise ValueError("errorfunc must be specified")
-
-    def getfct(self, acti):
-        if acti == 'sigmoid':
-            def sigmoid(x):
-                return expit(x)
-            def sigmoiddif(x):
-                return (expit(x)) * (1 - expit(x))
-            return [sigmoid, sigmoiddif]
-
-        elif acti == 'relu':
-            def relu(x):
-                return np.maximum(x, 0)
-            def reludif(x):
-                return np.where(x >= 0, 1, 0)
-            return [relu, reludif]
-
-        elif acti == 'tanh':
-            def tan(x):
-                return np.tanh(x)
-            def tandiff(x):
-                return 1 - np.square(np.tanh(x))
-            return [tan, tandiff]
-
-        elif acti == 'softmaxaprox':
-            def softmaxaprox(x):
-                x = x - np.max(x, axis=0, keepdims=True)
-                return np.exp(x) / np.sum(np.exp(x), axis=0, keepdims=True)
-
-            def softmaxaproxdif(output):
-                return output * (1 - output)
-
-            return [softmaxaprox, softmaxaproxdif]
-
-        elif acti == 'softmax':
-            def softmax(x):
-                x = x - np.max(x, axis=0, keepdims=True)
-                return np.exp(x) / np.sum(np.exp(x), axis=0, keepdims=True)
-
-            def softmaxdif(output):
-                n = output.shape[0]
-                jacob = np.zeros((n, n))
-
-                for i in range(n):
-                    for j in range(n):
-                        if i == j:
-                            jacob[i, j] = output[i] * (1 - output[i])
-                        else:
-                            jacob[i, j] = -output[i] * output[j]
-
-                return jacob
-
-            return [softmax, softmaxdif]
-
-        elif acti == "leakyrelu":
-            def leakyrelu(x):
-                return np.maximum(self.cvcoef * x, 0)
-
-            def leakyreludif(x):
-                return np.where(x > 0, self.cvcoef, 0)
-
-            return [leakyrelu, leakyreludif]
-
-        else:
-            raise "You forgot to specify the activation function"
 
     def convolutionnp(self, image, kernel, *, mode="valid", reverse=False):  # 2 casos dependiendo de shape kernel y imagen
             lenkernel = kernel.shape  # Csortie, Centree, H,L
@@ -771,7 +582,7 @@ class CNN:
        return t
 
     def prediction(self, image):
-        self.printgray(image, "")
+        printgray(image, "")
         forw = self.forwardprop(image)
         decision = self.choix(forw[0])
 
@@ -804,10 +615,10 @@ class CNN:
         self.parameters = dico["parameters"]
 
         for c in range(self.nbconv):
-            self.parameters["fctcl" + str(c)] = self.getfct(dico["convlay"][c+1][1])
+            self.parameters["fctcl" + str(c)] = getfct(dico["convlay"][c+1][1], self.cvcoef)
         for l in range(self.nblay):
-            self.parameters["fct" + str(l)] = self.getfct(dico["lay"][l+1][1])[0]
-            self.parameters["diff" + str(l)] = self.getfct(dico["lay"][l+1][1])[1]
+            self.parameters["fct" + str(l)] = getfct(dico["lay"][l+1][1], self.cvcoef)[0]
+            self.parameters["diff" + str(l)] = getfct(dico["lay"][l+1][1], self.cvcoef)[1]
 
         self.convdims = dico["convdims"]
         self.dimweights = dico["dimweights"]
@@ -884,7 +695,7 @@ g = CNN(parametros)
 
 # g.train()
 #
-# g.printgray(g.pix[10])
+# printgray(g.pix[10])
 #
 # g.tauxerreur()
 
