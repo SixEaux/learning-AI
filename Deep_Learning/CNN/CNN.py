@@ -42,7 +42,7 @@ class CNN:
         self.nblay = len(par.infolay) # nombre de layers
         self.lenbatch = par.batch #longueur du batch, implémenté seulement sans convolution
 
-        self.base = base
+        self.base = par.base
 
         # INITIALISATION VARIABLES
         self.cvcoef = par.coefcv #learning rate
