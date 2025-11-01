@@ -1,19 +1,20 @@
 import pickle
 import numpy as np
+from Helpers import converttogreyscale
 
 def takeinputs(basededonnees):
     if basededonnees == "mnist":
         # MNIST
-        with open('Datas/Mnist/valeursentraine', 'rb') as f:
+        with open('Deep_Learning/CNN/Datas/Mnist/valeursentraine', 'rb') as f:
             valeurs = np.array(pickle.load(f))
 
-        with open('Datas/Mnist/pixelsentraine', 'rb') as f:
+        with open('Deep_Learning/CNN/Datas/Mnist/pixelsentraine', 'rb') as f:
             pixels = np.array(pickle.load(f)).T
 
-        with open('Datas/Mnist/testval', 'rb') as f:
+        with open('Deep_Learning/CNN/Datas/Mnist/testval', 'rb') as f:
             qcmval = pickle.load(f)
-
-        with open('Datas/Mnist/testpix', 'rb') as f:
+            
+        with open('Deep_Learning/CNN/Datas/Mnist/testpix', 'rb') as f:
             qcmpix = np.array(pickle.load(f)).T
 
         perm = np.random.permutation(pixels.shape[1])
@@ -66,23 +67,23 @@ def takeinputs(basededonnees):
         raise ValueError("Pas de base de données dispo!")
 
 
-def processdata(self, pix, qcm, conv): 
+def processdata(base, pix, qcm, conv): 
     """transform data to a good form for the NN depending on if it is for test, which data used and if there is convolution or not
     (i need this due to a not so good transformation of the data when imported needs fixing)"""
     if conv:
-        if self.base == "mnist":
+        if base == "mnist":
             if qcm:
                 datamod = [pix[:, a].reshape(1, 28, 28) for a in range(pix.shape[1])]
             else:
                 datamod = [pix[:, a].reshape(1, 28, 28) / 255 for a in range(pix.shape[1])]
 
-        elif self.base == "fashion":
+        elif base == "fashion":
             if qcm:
                 datamod = [pix[:, a].reshape(1, 28, 28) for a in range(pix.shape[1])]
             else:
                 datamod = [pix[:, a].reshape(1, 28, 28) / 255 for a in range(pix.shape[1])]
 
-        elif self.base == "ciphar-10":
+        elif base == "ciphar-10":
             datamod = pix
 
         else:
@@ -90,20 +91,20 @@ def processdata(self, pix, qcm, conv):
             raise TypeError
 
     else:
-        if self.base == "mnist":
+        if base == "mnist":
             if qcm:
                 datamod = pix
             else:
                 datamod = pix / 255
 
-        elif self.base == "fashion":
+        elif base == "fashion":
             if qcm:
                 datamod = pix
             else:
                 datamod = pix / 255
 
-        elif self.base == "ciphar-10":
-            datamod = [self.converttogreyscale(i).reshape(-1, 1) for i in pix] #NO ESTA BIEN AUN ESTE CREO
+        elif base == "ciphar-10":
+            datamod = [converttogreyscale(i).reshape(-1, 1) for i in pix] #NO ESTA BIEN AUN ESTE CREO
             final = np.array(datamod[0])
             for i in range(1, len(datamod)):
                 final = np.concatenate([final, datamod[i]], axes=1)

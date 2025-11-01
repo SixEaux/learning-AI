@@ -19,7 +19,14 @@ def printimage(base, titre=""):
     plt.title(titre)
     plt.show()
 
+def converttogreyscale(rgbimage):
+        return np.tensordot(rgbimage,np.array([0.299, 0.587, 0.114]), (1, 2))
 
+def flatening(image):
+        return image.reshape((-1,1))
+
+def paddington(image, padavant, padapres): #padavant ce qu'on ajoute a la ligne et l'autre est evident
+        return np.pad(image, ((0,0), (padavant, padapres), (padavant, padapres))) # padding
 
 # EL RESTO ES SOLO PARA SABER TIEMPO DE CADA FUNCION
 

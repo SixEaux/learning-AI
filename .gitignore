@@ -10,9 +10,9 @@ Deep_Learning/CNN/Datas/Mnist/mnist_test.csv
 
 Deep_Learning/CNN/Datas/Mnist/mnist_train.csv
 
-Deep_Learning/CNN/BestModels/
+Deep_Learning/CNN/Datas/Ciphar-10/
 
-Deep_Learning/CNN/Datas/
+Deep_Learning/CNN/BestModels/
 
 __pycache__
 
