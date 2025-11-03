@@ -5,16 +5,16 @@ from Helpers import converttogreyscale
 def takeinputs(basededonnees):
     if basededonnees == "mnist":
         # MNIST
-        with open('Deep_Learning/CNN/Datas/Mnist/valeursentraine', 'rb') as f:
+        with open('Datas/Mnist/valeursentraine', 'rb') as f:
             valeurs = np.array(pickle.load(f))
 
-        with open('Deep_Learning/CNN/Datas/Mnist/pixelsentraine', 'rb') as f:
+        with open('Datas/Mnist/pixelsentraine', 'rb') as f:
             pixels = np.array(pickle.load(f)).T
 
-        with open('Deep_Learning/CNN/Datas/Mnist/testval', 'rb') as f:
+        with open('Datas/Mnist/testval', 'rb') as f:
             qcmval = pickle.load(f)
             
-        with open('Deep_Learning/CNN/Datas/Mnist/testpix', 'rb') as f:
+        with open('Datas/Mnist/testpix', 'rb') as f:
             qcmpix = np.array(pickle.load(f)).T
 
         perm = np.random.permutation(pixels.shape[1])

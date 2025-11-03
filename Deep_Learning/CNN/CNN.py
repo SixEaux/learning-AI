@@ -10,6 +10,7 @@ Things to improve for next time:
 
 #GENERAL
 import pickle
+from tqdm import tqdm
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -447,7 +448,7 @@ class CNN:
             C = []
             for _ in range(self.iter):
                 L = []
-                for p in range(self.pix.shape[1]):
+                for p in tqdm(range(self.pix.shape[1])):
                     forw = self.forwardprop(self.pix[:,p].reshape(-1,1))
 
                     dw, db, loss, dc, dcb = self.backprop(self.vecteur(self.vales[p]), forw[1], forw[2], forw[3], forw[4], 1, p==0)
@@ -470,15 +471,15 @@ class CNN:
             C = []
             for i in range(self.iter):
                 L = []
-                for p in range(len(self.pix)):
+                for p in tqdm(range(len(self.pix))):
                     forw = self.forwardprop(self.pix[p]) #canaux, h,l
 
                     dw, db, loss, dc, dcb = self.backprop(self.vecteur(self.vales[p]), forw[1], forw[2], forw[3], forw[4], 1, p == 0)
 
                     self.actualiseweights(dw, db, 1, dc, dcb)
 
-                    if (p + self.iter*i) % ecart == 0:
-                        print("Percentage: " + str(np.round((p+i*len(self.pix))*100/(len(self.pix)*self.iter))))
+                    # if (p + self.iter*i) % ecart == 0:
+                    #     print("Percentage: " + str(np.round((p+i*len(self.pix))*100/(len(self.pix)*self.iter))))
 
                     L.append(loss)
                 C.append(np.average(L))
