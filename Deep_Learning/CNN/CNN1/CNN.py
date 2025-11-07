@@ -20,7 +20,7 @@ from scipy.signal import correlate2d
 from skimage.measure import block_reduce
 
 # ORGANIZACION
-from Import_data import processdata
+from Deep_Learning.CNN.CNN1.Import_data import processdata
 from Parameters import Parametros
 from Drawing import Draw
 from Helpers import printbasesimple, printgray, printimage, flatening, paddington

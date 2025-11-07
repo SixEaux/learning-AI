@@ -12,7 +12,10 @@ Deep_Learning/CNN/Datas/Mnist/mnist_train.csv
 
 Deep_Learning/CNN/Datas/Ciphar-10/
 
-Deep_Learning/CNN/BestModels/
+Deep_Learning/CNN/CNN1/BestModels/
+
+Deep_Learning/CNN/Perceptron/ 
+# maybe change this above
 
 __pycache__
 

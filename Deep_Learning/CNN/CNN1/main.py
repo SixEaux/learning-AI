@@ -1,4 +1,4 @@
-from Import_data import takeinputs
+from Deep_Learning.CNN.CNN1.Import_data import takeinputs
 from Parameters import Parametros
 from CNN import CNN
 import time
