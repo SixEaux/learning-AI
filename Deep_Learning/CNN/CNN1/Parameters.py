@@ -25,7 +25,6 @@ class Parametros:
     errorfunc: str = "CEL" # FCT DE COUT
 
     apprentissagedynamique: bool = False # ESTCE QU'IL APPREND SUR LES TESTS PENDANT LE TEST
-    graph: bool = False # DESSINE DES GRAPHIQUES
     tauxfiniter: bool = False # ESTCE QU'IL FAIT LE QCM A LA FIN DE CHAQUE ITERATION
 
     #CNN

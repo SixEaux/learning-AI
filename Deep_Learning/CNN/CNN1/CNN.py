@@ -1,10 +1,9 @@
 """This CNN is not very well coded i am conscious.
 It is a work in progress, it was more to try to code it without insight just trying to make it work.
-I am recoding it more clearly, well structured and better performance.
+I am recoding it more clearly and well structured.
 
 Things to improve for next time:
-    - separate the classes
-    - improve how the parameters are passed (not a list with neurons)
+    - improve how the parameters are passed (arguments are too difficult)
     - make batch for CNN
     - look up if it is better with numpy or scipy (i think numpy)"""
 
@@ -115,7 +114,6 @@ class CNN:
         self.errorfunc = geterrorfunc(par.errorfunc) #choisir la fonction d'erreur
 
         self.aprentissagedynamique = par.apprentissagedynamique # estce qu'il apprned au fur et à mesure qu'il passe le qcm
-        self.graph = par.graph # est-ce qu'il dessine des graphs a la fin
         self.tauxfiniter = par.tauxfiniter # faire ou non a la fin de chaque itération un calcul de taux d'erreur
 
         # PARA LEARNING RATE ADAPTATIF (basé sur RMSprop) (ne fonctionne pas totalement encore)
@@ -126,7 +124,6 @@ class CNN:
         self.moyencb = [np.zeros(i) for i in self.dimconvbiais]
         self.moyenw = [np.zeros(i) for i in self.dimweights]
         self.moyenb = [np.zeros(i) for i in self.dimbiais]
-
 
         self.convlay = par.infoconvlay
         self.lay = par.infolay
@@ -459,13 +456,6 @@ class CNN:
 
                 C.append(np.average(L))
 
-            if self.graph:
-                plt.plot([i for i in range(self.iter)], C)
-                plt.xlabel('Iteration')
-                plt.ylabel('Loss')
-                plt.title('Fonction de Cout')
-                plt.show()
-
         else:
             ecart = 5000 if len(self.pix) < 10000 else 15000
             C = []
@@ -478,9 +468,6 @@ class CNN:
 
                     self.actualiseweights(dw, db, 1, dc, dcb)
 
-                    # if (p + self.iter*i) % ecart == 0:
-                    #     print("Percentage: " + str(np.round((p+i*len(self.pix))*100/(len(self.pix)*self.iter))))
-
                     L.append(loss)
                 C.append(np.average(L))
 
@@ -488,13 +475,6 @@ class CNN:
                     print("___________________________________________________________________________________________________________")
                     print(f"Le taux à l'itération {i} est de {self.tauxlent()}")
 
-            if self.graph:
-                print(C)
-                plt.plot([i for i in range(self.iter)], C)
-                plt.xlabel('Iteration')
-                plt.ylabel('Loss')
-                plt.title('Fonction de Cout')
-                plt.show()
         return
 
     def trainbatch(self):
@@ -515,39 +495,19 @@ class CNN:
 
         return
 
-    def tauxlent(self): #go in all the test and see accuracy
-        if self.nbconv == 0:
-            nbbien = 0
-            for image in range(self.qcmpix.shape[1]):
-                forw = self.forwardprop(self.qcmpix[:, image].reshape(-1,1))
+    def tauxlent(self): #go in all the test and see accuracy (used for CNN)
+        nbbien = 0
+        for image in range(len(self.qcmpix)):
+            forw = self.forwardprop(self.qcmpix[image])
 
-                observed = self.choix(forw[0])
+            observed = self.choix(forw[0])
 
-                if observed == self.qcmval[image]:
-                    nbbien += 1
-                else:
-                    if self.aprentissagedynamique:
+            if observed == self.qcmval[image]:
+                nbbien += 1
 
-                        dw, db, _, dc, dcb = self.backprop(self.vecteur(self.vales[image]), forw[1], forw[2], forw[3], forw[4], 1, image==0)
+        return nbbien * 100 / len(self.qcmpix)
 
-
-                        self.actualiseweights(dw, db, 1, dc, dcb)
-
-            return nbbien*100 / self.qcmpix.shape[1]
-
-        else:
-            nbbien = 0
-            for image in range(len(self.qcmpix)):
-                forw = self.forwardprop(self.qcmpix[image])
-
-                observed = self.choix(forw[0])
-
-                if observed == self.qcmval[image]:
-                    nbbien += 1
-
-            return nbbien * 100 / len(self.qcmpix)
-
-    def tauxrapide(self):
+    def tauxrapide(self): #used only for NN for now
         if self.nbconv == 0:
             forw = self.forwardprop(self.qcmpix.reshape(784,-1))
 
